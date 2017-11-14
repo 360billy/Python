@@ -1,0 +1,114 @@
+# -*- coding: utf-8 -*-  
+  
+''''' 
+@author: homer 
+@see: ithomer.net 
+'''  
+  
+import Queue  
+import threading  
+import urllib, urllib2  
+import time  
+  
+# 队列大小  
+myqueue = Queue.Queue(maxsize=0)      
+queue = Queue.Queue()  
+hosts = ["http://1","http://2","http://3"]  
+  
+  
+lock = threading.Lock()  
+def printMsg(msg):  
+    global lock  
+    if lock.acquire():  
+        print(msg)  
+        lock.release()  
+              
+class ThreadUrl(threading.Thread):  
+    def __init__(self, queue, htint):  
+        threading.Thread.__init__(self)  
+        self.queue = queue  
+        self.Ht = htint         # 线程ID  
+          
+              
+    def run(self):  
+        while True:  
+            host = self.queue.get()                     # get()方法从队头删除并返回一个项目  
+            printMsg("thread_id: " + self.getName() + ";\t htint: " + str(self.Ht) + " --- host: " + host)  
+            printMsg("qsize: %d" % self.queue.qsize())  # 返回队列的大小，近似值  
+            if self.queue.empty():                      # 如果队列为空  
+                printMsg("queue is empty of " + self.getName())  
+            self.queue.task_done()  # 退出  
+  
+def main():  
+    # spawn a pool of threads, and pass them queue instance  
+    for i in range(5):  
+        t = ThreadUrl(queue, i)  
+        t.setDaemon(True)  
+        t.start()  
+        # populate queue with data  
+        for host in hosts:          # 往线程中填充数据  
+            printMsg("queue put()")  
+            queue.put(host)         # 插入队列  
+        queue.join()                # 等待队列直到全部被处理完  
+  
+if __name__ == "__main__":  
+    start = time.time()  
+    main()  
+    time.sleep(1)  
+    costTime = time.time() - start - 1  
+    print "Elapsed Time: %s (s)" % costTime     # 计时  
+运行结果：
+[python] view plain copy
+queue put()  
+queue put()  
+queue put()  
+thread_id: Thread-1;     htint: 0 --- host: http://1  
+qsize: 2  
+thread_id: Thread-1;     htint: 0 --- host: http://2  
+qsize: 1  
+thread_id: Thread-1;     htint: 0 --- host: http://3  
+qsize: 0  
+queue is empty of Thread-1  
+queue put()  
+queue put()  
+queue put()  
+thread_id: Thread-2;     htint: 1 --- host: http://1  
+qsize: 2  
+thread_id: Thread-2;     htint: 1 --- host: http://2  
+qsize: 1  
+thread_id: Thread-2;     htint: 1 --- host: http://3  
+qsize: 0  
+queue is empty of Thread-2  
+queue put()  
+queue put()  
+queue put()  
+thread_id: Thread-3;     htint: 2 --- host: http://1  
+thread_id: Thread-2;     htint: 1 --- host: http://2  
+qsize: 1  
+thread_id: Thread-2;     htint: 1 --- host: http://3  
+qsize: 0  
+queue is empty of Thread-2  
+qsize: 0  
+queue is empty of Thread-3  
+queue put()  
+queue put()  
+queue put()  
+thread_id: Thread-1;     htint: 0 --- host: http://1  
+qsize: 2  
+thread_id: Thread-1;     htint: 0 --- host: http://2  
+qsize: 1  
+thread_id: Thread-1;     htint: 0 --- host: http://3  
+qsize: 0  
+queue is empty of Thread-1  
+queue put()  
+queue put()  
+queue put()  
+thread_id: Thread-2;     htint: 1 --- host: http://1  
+qsize: 2  
+thread_id: Thread-2;     htint: 1 --- host: http://2  
+qsize: 1  
+thread_id: Thread-1;     htint: 0 --- host: http://3  
+queue is empty of Thread-2  
+qsize: 0  
+queue is empty of Thread-1  
+Elapsed Time: 0.00404787063599 (s)  
