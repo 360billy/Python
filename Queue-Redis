@@ -82,3 +82,11 @@ def pubsub():
  
 if __name__ == '__main__':
     app.run(debug=True)
+    
+启动脚本，使用
+siege -c10 -r 5 http://127.0.0.1:5000/prodcons
+siege -c10 -r 5 http://127.0.0.1:5000/pubsub
+
+siege -c10 -r 5 http://127.0.0.1:5000/prodcons
+siege -c10 -r 5 http://127.0.0.1:5000/pubsub
+可以分别在监听的脚本输入中看到异步消息。在异步的任务中，可以执行一些耗时间的操作，当然目前这些做法并不知道异步的执行结果，如果需要知道异步的执行结果，可以考虑设计协程任务或者使用一些工具如RQ或者celery等
