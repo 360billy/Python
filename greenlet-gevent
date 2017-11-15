@@ -1,0 +1,87 @@
+python中的协程是通过yield生成器的特性实现的，但如果直接使用确实不方便，greenlet对其作了封装，使其用起来更方便：
+
+首先安装模块：
+
+from greenlet import greenlet
+import time
+
+def test1():
+    while True:
+        print('-------test1------')
+        g2.switch() #表示切换到g2协程
+        time.sleep(1)
+
+def test2():
+    while True:
+        print('-------test2-------')
+        g1.switch() #表示切换到g1协程
+        time.sleep(1)
+
+g1 = greenlet(test1)
+g2 = greenlet(test2)
+g1.switch()#表示切换到g1协程
+
+这样就能很方便的控制线程间的切换。
+但是在实际问题中自己控制切换是很麻烦的事，要判断何时切换何时转回来，在gevent模块中就完成了自动检测费时操作，转到其他协程，然后费时结束后在回来继续执行，其中的底层原理应该和select和epoll的消息通知有关。下面看gevent的使用事例。
+
+from gevent import monkey
+import gevent
+from urllib import request
+
+#给原来的io操作加上补丁，使它不堵塞支持协程
+monkey.patch_all()
+
+def download(url):
+    print('开始下载%s'%url)
+    result = request.urlopen(url)
+    print('正在读取')
+    s = result.readline()
+    print('%s里的数据为%s'%(url,s))
+
+gevent.joinall(
+    [gevent.spawn(download,url) for url in ('http://www.baidu.com','http://www.sohu.com','http://www.soso.com') ]
+)
+运行结果：
+
+开始下载http://www.baidu.com
+开始下载http://www.sohu.com
+开始下载http://www.soso.com
+正在读取
+http://www.sohu.com里的数据为b'<!DOCTYPE html>\n'
+正在读取
+http://www.baidu.com里的数据为b'<!DOCTYPE html>\n'
+正在读取
+http://www.soso.com里的数据为b'<!DOCTYPE html>\r\n'
+从上面结果可以看出，当遇到urlopen'这样的io操作时，cpu发出io操作命令后，就跳到了其他的协程中，直到io操作结束才切换回来。
+
+关于monkey
+
+monky是一种动态追加功能的补丁，利用动态语言的灵活性，改变内建的函数或对象。通过monkey.patch_all(),原来的urlopn已经发生了改变，不在是原有的堵塞了，而是支持协程的非堵塞。
+
+from gevent import monkey
+from urllib import request
+import socket
+url = 'http://www.baidu.com'
+print('monkey之前')
+print(request.urlopen)
+print(socket.socket)
+
+monkey.patch_all()
+print('monky之后')
+print(request.urlopen)
+print(socket.socket)
+运行结果：
+
+monkey之前
+<function urlopen at 0x0000018E24828730>
+<class 'socket.socket'>
+monky之后
+<function urlopen at 0x0000018E24828730>
+<class 'gevent._socket3.socket'>
+可见monkey后socket已经不是原来的socket了，urlopen也应该做了相应的改变，虽然不知都改了哪里。
+
+总结
+
+greenlet是对协程的一个封装，使的协程间的切换变得方便易于控制
+gevent实现了自动识别io操作，自动进行协程的切换调度。是一种更高级的封装。
+ 
