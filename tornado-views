@@ -1,0 +1,30 @@
+import time
+import tornado.web
+from tornado import gen
+from concurrent.futures import ThreadPoolExecutor
+from tornado.concurrent import run_on_executor
+
+class IndexHandler(tornado.web.RequestHandler):
+    executor = ThreadPoolExecutor(50)
+    @tornado.gen.coroutine
+    def get(self):
+        print("begin")
+        #time.sleep(10)
+        yield self.pin()
+        print("end")
+        self.write('ok')
+        self.finish()
+    @run_on_executor
+    def pin(self):
+#        os.system("ping -c 10 www.baidu.com")
+        print("do")
+        time.sleep(10)
+
+class ProApi(WebApiBaseController):
+    def on_request_get_ready(self, method, path, real_arguments):#查询
+        result=DataBaseGeneralHandler().selsect_product_bytag(real_arguments)
+        self.on_response_success(result)
+    def on_request_post_ready(self, method, path, real_arguments): #添加
+        real_arguments["ip"]=self.remote_ip()
+        result=DataBaseGeneralHandler().add_product(real_arguments)
+        self.on_response_all(result)#根据结果处理反馈
