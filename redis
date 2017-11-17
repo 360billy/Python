@@ -1,0 +1,60 @@
+unzip  redis-py-master.zip
+
+python setup.py install
+
+/server/software/redis/bin/redis-cli -h 192.168.100.4 -p 6379
+
+quit ：退出连接
+
+keys *  所有键
+
+del key  删除key 
+FLUSHDB 清除一个数据库，FLUSHALL清除整个redis数据。
+
+cp -r /server/website/jinfax.www/* /server/website/jinfax.redis
+linux安装redis模块http://blog.csdn.net/qiruiduni/article/details/49662333
+
+
+
+import redis
+import settings
+
+Redis_CLIENT= redis.Redis(host = settings.jredis_host, port = settings.jredis_port, db = settings.jredis_db)
+class JinFaxRedis:
+  #1. strings 类型及操作
+  #设置 key 对应的值为 string 类型的 value
+  def set(self, key, value):
+    return Redis_CLIENT.set(key, value)
+
+  #设置 key 对应的值为 string 类型的 value。如果 key 已经存在,返回 0,nx 是 not exist 的意思
+  def setnx(self, key, value):
+    return Redis_CLIENT.setnx(key, value)
+
+
+  #设置 key 对应的值为 string 类型的 value,并指定此键值对应的有效期
+  def setex(self, key, value,time):
+    return Redis_CLIENT.setex(key, value, time)
+
+  #设置指定 key 的 value 值的子字符串
+  #setrange name 8 gmail.com
+  #其中的 8 是指从下标为 8(包含 8)的字符开始替换
+  def setrange(self, key, num, value):
+    return Redis_CLIENT.setrange(key, num, value)
+
+  #获取keys
+  def getkeys(self):
+    return Redis_CLIENT.keys()
+
+  #获取keys(有条件查询多个) ,para:字符串
+  def getkeyarrbykeys(self,para):
+    if para !="" and para is not None:
+      return Redis_CLIENT.keys(para)
+    else:
+      return []
+
+  #根据key关键字设置key过期 ,keys:关键字，sencond:过期时间（秒）
+  def setKeyExpireByKeys(self,keys,second):
+      if keys is not None and keys !="":
+          delkeys=self.getkeyarrbykeys(keys)
+          for row in delkeys:
+              self.setexpire(str(row.decode()),second) #设置second秒过期
