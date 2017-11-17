@@ -19,6 +19,20 @@ class IndexHandler(tornado.web.RequestHandler):
 #        os.system("ping -c 10 www.baidu.com")
         print("do")
         time.sleep(10)
+        
+        
+from tasks import db_operation
+
+calss Resource(RequestHandler):
+    @asynchronous
+    def get():
+        # 参数通过args传递,回调通过callback指定
+        db_operation.apply_async(args=[id], callback=self.on_success)
+    def on_success(self, response):
+        # 获取返回的结果
+        resource = response.result
+        self.write(resource)
+        self.finish()
 
 class ProApi(WebApiBaseController):
     def on_request_get_ready(self, method, path, real_arguments):#查询
