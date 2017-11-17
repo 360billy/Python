@@ -1,0 +1,59 @@
+先决条件
+
+Numpy, Scipy
+IPython
+matplotlib
+scikit-learn
+sklearn介绍
+
+scikit-learn是数据挖掘与分析的简单而有效的工具。 
+依赖于NumPy， SciPy和matplotlib。
+
+它主要包含以下几部分内容：
+
+从功能来分： 
+classification
+Regression
+Clustering
+Dimensionality reduction
+Model selection
+Preprocessing
+从API模块来分： 
+sklearn.base: Base classes and utility function
+sklearn.cluster: Clustering
+sklearn.cluster.bicluster: Biclustering
+sklearn.covariance: Covariance Estimators
+sklearn.model_selection: Model Selection
+sklearn.datasets: Datasets
+sklearn.decomposition: Matrix Decomposition
+sklearn.dummy: Dummy estimators
+sklearn.ensemble: Ensemble Methods
+sklearn.exceptions: Exceptions and warnings
+sklearn.feature_extraction: Feature Extraction
+sklearn.feature_selection: Feature Selection
+sklearn.gaussian_process: Gaussian Processes
+sklearn.isotonic: Isotonic regression
+sklearn.kernel_approximation: Kernel Approximation
+sklearn.kernel_ridge: Kernel Ridge Regression
+sklearn.discriminant_analysis: Discriminant Analysis
+sklearn.linear_model: Generalized Linear Models
+sklearn.manifold: Manifold Learning
+sklearn.metrics: Metrics
+sklearn.mixture: Gaussian Mixture Models
+sklearn.multiclass: Multiclass and multilabel classification
+sklearn.multioutput: Multioutput regression and classification
+sklearn.naive_bayes: Naive Bayes
+sklearn.neighbors: Nearest Neighbors
+sklearn.neural_network: Neural network models
+sklearn.calibration: Probability Calibration
+sklearn.cross_decomposition: Cross decomposition
+sklearn.pipeline: Pipeline
+sklearn.preprocessing: Preprocessing and Normalization
+sklearn.random_projection: Random projection
+sklearn.semi_supervised: Semi-Supervised Learning
+sklearn.svm: Support Vector Machines
+sklearn.tree: Decision Tree
+sklearn.utils: Utilities
+
+http://blog.csdn.net/lilianforever/article/details/53780613
+http://blog.csdn.net/liujiandu101/article/details/51654975
