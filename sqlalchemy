@@ -1,0 +1,47 @@
+from sqlalchemy import *
+from sqlalchemy import create_engine, MetaData, orm,case
+from sqlalchemy import Table, Column, Integer, String, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import mapper, sessionmaker,relationship
+from sqlalchemy.pool import NullPool
+from datetime import *
+#创建engine连接，直接接触DB;echo输出具体的连接过程
+mysql_engine = create_engine('mysql+mysqlconnector://root:root@localhost/mydatabase', echo=True,poolclass=NullPool)
+# 创建metadata绑定engine，用来操作表
+#metadata = MetaData(mysql_engine)
+Base=declarative_base()   #基类
+
+#定义一个函数，用来获取sqlalchemy的session
+def getsession():
+    Session = sessionmaker()
+    Session.configure(bind=mysql_engine)
+    session = Session()
+    return session
+    
+ 
+#通路与靶点关联表  多对多关系
+MenuRelation = Table('tb_menu_relation', Base.metadata,
+    Column('r_id', Integer,primary_key=True,unique=True, autoincrement=True),#id
+    Column('r_menuid', Integer, ForeignKey('tb_menu.m_id'), nullable=False, primary_key=True),#关联通路id
+    Column('r_submenuid', Integer, ForeignKey('tb_submenu.sm_id'), nullable=False, primary_key=True),#关联靶点id
+    Column('r_time', TIMESTAMP(3),default=datetime.now())#关联时间
+    )
+#通路
+class Menu(Base):
+    __tablename__='tb_menu'  #表名
+    m_id=Column(Integer, primary_key=True,unique=True, autoincrement=True)
+    m_type=Column(String(45))  #通路类型 ,0:Home/1:Chemicals/2:Pharmaceutical Intermediate/3:Life Science/4:Life Science/5:Research Areas/6:Customized Sythesis/7:Support
+    m_name=Column(String(200))  #通路名称
+    m_remark=Column(String(5000))  #描述
+    m_time=Column(TIMESTAMP(3))     #添加时间
+    m_sort=Column(Integer)     #前端排序位置123456
+    submenu = relationship("SubMenu",secondary=MenuRelation,lazy='dynamic')
+#靶点
+class SubMenu(Base):
+    __tablename__='tb_submenu'  #表名
+    sm_id=Column(Integer, primary_key=True,unique=True, autoincrement=True)
+    sm_name=Column(String(200))  #名称
+    sm_description=Column(Text) #靶点描述
+    sm_time=Column(TIMESTAMP(3)) #添加时间
+    menu = relationship("Menu", secondary=MenuRelation,lazy='dynamic')
+    subtype= relationship("SubType", back_populates="submenu",lazy='dynamic')
