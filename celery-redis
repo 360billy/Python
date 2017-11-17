@@ -54,3 +54,63 @@ Celery默认设置就能满足基本要求。Worker以Pool模式启动，默认�
 
 
 Celery还有一些高级用法，比如把多个任务组合成一个原子任务等，还有一个完善的监控接口，以后有空再继续研究
+
+
+
+
+新建一个task.py
+from celery import Celery
+
+celery = Celery('tasks', broker='amqp://')
+celery.conf.CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'amqp')
+
+@celery.task(name='task.db_operation')
+def db_operation(id):
+    # 耗时的数据库操作
+    pass 
+    
+新建一个handler.py
+import tcelery
+tcelery.setup_nonblocking_producer()
+
+from tasks import db_operation
+
+calss Resource(RequestHandler):
+    @asynchronous
+    def get():
+        # 参数通过args传递,回调通过callback指定
+        db_operation.apply_async(args=[id], callback=self.on_success)
+    def on_success(self, response):
+        # 获取返回的结果
+        resource = response.result
+        self.write(resource)
+        self.finish()
+ 
+from concurrent.futures import ThreadPoolExecutor
+from tornado.concurrent import run_on_executor
+
+class ChatHandler(web.RequestHandler):
+    executor = ThreadPoolExecutor(4)
+
+    @web.asynchronous
+    @gen.coroutine
+    def get(self):
+        resource = yield self.get_db_operation()
+        self.write(resource)
+        self.finish()
+
+    @web.asynchronous
+    @gen.coroutine
+    def post(self):
+        yield self.post_db_operation()
+        self.write('success')
+        self.finish()
+
+    @run_on_executor
+    def get_db_operation(self):
+        return resource 
+
+    @run_on_executor
+    def post_db_operation(self):
+        pass
+
