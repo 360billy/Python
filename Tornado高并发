@@ -1,0 +1,15 @@
+class AdmStockInfoByBDsApi(BaseHandler):
+    executor = ThreadPoolExecutor(4)#新建线程
+
+    @run_on_executor
+    def getStockInterfaceByBDs(self,bds):
+        return InterfaceGeneralHandler().getStockInterfaceByBDs(bds)
+
+    @tornado.gen.coroutine
+    def get(self): 
+        real_arguments=self.getB64DecodeParams()
+        result =yield self.getStockInterfaceByBDs(real_arguments.get("bds",[]))
+        if len(result)>0:
+            self.on_response_success(result)
+        else:
+            self.on_response_success([])
