@@ -1,0 +1,70 @@
+在使用 create_engine创建引擎时，如果默认不指定连接池设置的话，一般情况下，SQLAlchemy会使用一个 QueuePool绑定在新创建的引擎上。并附上合适的连接池参数。
+
+在以默认的方法create_engine时（如下），就会创建一个带连接池的引擎。
+
+engine = create_engine('postgresql://postgres@127.0.0.1/dbname')
+在这种情况下，当你使用了session后就算显式地调用session.close()，也不能把连接关闭。连接会由QueuePool连接池进行管理并复用。
+
+这种特性在一般情况下并不会有问题，不过当数据库服务器因为一些原因进行了重启的话。最初保持的数据库连接就失效了。随后进行的session.query()等方法就会抛出异常导致程序出错。
+
+如果想禁用SQLAlchemy提供的数据库连接池，只需要在调用create_engine是指定连接池为NullPool，SQLAlchemy就会在执行session.close()后立刻断开数据库连接。当然，如果session对象被析构但是没有被调用session.close()，则数据库连接不会被断开，直到程序终止。
+
+下面的代码就可以避免SQLAlchemy使用连接池：
+
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
+
+engine = create_engine('postgresql://postgres@127.0.0.1/dbname',
+  poolclass=NullPool)
+Session = sessionmaker(bind=engine)
+session = Session()
+usr_obj_list = session.query(UsrObj).all()
+print usr_obj_list[0].id
+session.close()
+
+
+sessionmaker() 会生成一个数据库会话类。这个类的实例可以当成一个数据库连接，它同时还记录了一些查询的数据，并决定什么时候执行语句。由于自己维护了一个数据库连接池（默认5个连接）因此开销不大
+可以使用sqlalchemy.orm.scoped_session，它能保证每个线程获得的session对象都是唯一的。
+
+
+Session的生命期
+
+Session通常在我们需要对数据库进行操作时创建。
+
+一旦一个Session创建成功，我们在这个Session下完成多个事务（transaction）。
+
+究竟何时创建和关闭session，不能一概而论。但是一个原则是session不应该在操作事务的方法中创建。
+
+例如下面的方法定义就是不规范的。
+
+[python] view plain copy
+class SomeThing(object):  
+    def go(self):  
+        session = Session()  
+        try:  
+            # Do something  
+            session.commit()  
+        except:  
+            session.rollback()  
+            raise  
+
+我们应该做如下改正。
+
+class SomeThing(object):  
+    def go(self, session):  
+        # Do something  
+  
+def run_my_program():  
+    session = Session()  
+    try:  
+        SomeThing().go(session)  
+        session.commit()  
+    except:  
+        session.rollback()  
+        raise  
+    finally:  
+        session.close()  
