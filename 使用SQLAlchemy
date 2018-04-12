@@ -68,3 +68,6 @@ def run_my_program():
         raise  
     finally:  
         session.close()  
+   
+mysql_engine = create_engine('mysql+mysqlconnector://root:root@localhost/arkpharm', encoding='utf-8',echo=True,pool_size=500, pool_recycle=3600)
+self.session = scoped_session(sessionmaker(bind=mysql_engine,autocommit=False, autoflush=False,expire_on_commit=False))
