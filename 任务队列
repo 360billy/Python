@@ -1,0 +1,65 @@
+服务概述
+在构建一个高性能可伸缩的Web应用的时候，你可以使用任务队列服务将一些耗时的操作从HTTP请求的处理中分解出来，放到后台去异步执行。大部分的Web请求应该在 500ms 内完成，如果你发现你的应用有大于这个甚至有花费一两秒才能完成的请求，那么这个时候你应该考虑使用任务队列服务。
+
+常见的使用场景如：发送用户注册的通知邮件、调用一个比较慢的API接口等。
+
+如何使用
+在使用任务队列前，您需要先在任务队列的管理页面中创建队列，然后在应用中通过任务队列的客户端向队列中推入任务，放入队列的任务会放到后台去以HTTP的方式执行。
+
+任务队列中的任务的执行是以HTTP方式执行的，真正执行的是您应用中的HTTP回调函数，所以最长执行时间和HTTP页面执行时间相同。
+
+任务队列分为顺序队列和并发队列两种，顺序队列的任务顺序执行，而并发队列中的任务则以并行的方式执行。您还可以为每个队列指定错误回调url，当任务执行失败时会自动调用指定的错误回调url通知应用。
+
+任务的最大执行时间不得超过 300秒 。
+并发队列不保证任务的有序性。
+所有队列类型都有最大长度，请勿使队列长期阻塞。
+API使用手册
+sae.taskqueue.add_task(queue_name, url, payload=None, **kws)
+快速添加任务
+
+参数:	
+queue_name – 任务队列的名称
+url – 任务的url，如： /tasks/task_name
+payload – 可选，如果payload存在且不为None，则该任务为一POST任务，payload会作为请求的POST的数据。
+delay/prior – 可选，使用方法参见Task。
+class sae.taskqueue.Task(url, payload=None, **kwargs)
+Task类
+
+参数:	
+url – 任务的url，如： /tasks/task_name
+payload – 可选, 如果payload存在且不为None，则该任务为一POST任务，payload会作为请求的POST的数据。
+delay – 可选，设置任务延迟执行的时间，单位为秒，最大可以为600秒。
+prior – 可选，如果设置为True，则任务会被添加到任务队列的头部。
+class sae.taskqueue.TaskQueue(name, auth_token=None)
+TaskQueue类
+
+参数:	
+name – 任务队列的名称。
+auth_token – 可选, 一个包含两个元素的元组 (access_key, secretkey_key)。
+add(task)
+添加一个任务
+
+参数:	task – 添加的任务，可以为单个Task任务，也可以是一个Task列表。
+size()
+获取当前队列中还有多少未执行的任务。
+
+使用示例
+添加一个任务。
+
+from sae.taskqueue import Task, TaskQueue
+
+queue = TaskQueue('queue_name')
+queue.add(Task("/tasks/foo"))
+添加一个POST任务。
+
+queue.add(Task("/tasks/bar", "data"))
+批量添加任务。
+
+tasks = [Task("/tasks/update", user) for user in users]
+queue.add(tasks)
+快速添加任务。
+
+from sae.taskqueue import add_task
+add_task('queue_name', '/tasks/push', 'msg')
+注解
+任务的url现在已经改为相对的url，目前兼容绝对url，但是不推荐使用。 任务默认使用GET方式请求，如果Task带有payload参数且不为None则使用POST方式请求。
