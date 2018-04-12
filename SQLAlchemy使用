@@ -68,6 +68,13 @@ def run_my_program():
         raise  
     finally:  
         session.close()  
-   
+SQLAlchemy 支持连接池, 在 create_engine 时添加相关参数即可使用.
+
+pool_size 连接数
+max_overflow 最多多几个连接
+pool_recycle 连接重置周期
+pool_timeout 连接超时时间   
 mysql_engine = create_engine('mysql+mysqlconnector://root:root@localhost/arkpharm', encoding='utf-8',echo=True,pool_size=500, pool_recycle=3600)
 self.session = scoped_session(sessionmaker(bind=mysql_engine,autocommit=False, autoflush=False,expire_on_commit=False))
+
+https://segmentfault.com/a/1190000003856556
