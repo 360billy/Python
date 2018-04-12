@@ -1,0 +1,29 @@
+sqlalchemy数据库连接池的使用方式是延迟初始化，就是说一开始你调用create_engine(...)后创建的那个数据库池是空的，你后面通过session.connection()或者engine.connect()才开始创建连接，
+
+每当你创建一个连接，你调用engine.pool.status()就可以看到数据库连接池处于什么状态，下面说明以下status()的输出说明：
+
+‘Pool size: 16  Connections in pool: 1 Current Overflow: 1 Current Checked out connections: 16‘
+
+Pool size 是你指定的数据库池的大小
+
+Connections in pool 是在池子中可以使用的连接有多少个
+
+Current Overflow 这个参数说明当前存在的连接数超过Pool size多少个，当overflow (初始为Pool size的负值) 超过max_overflow(默认为10)之后就不能创建新的连接了，只能等待，换句话说：你的数据库连接池的大小虽然只有Pool size个，
+
+　　　　　　　　　　但是你可以创建的连接数则是Pool size+max_overflow， 没创建一个连接overflow 都会加1，到等于max_overflow时候就不能在创建连接了
+
+Current Checked out connections 是被占用的连接数
+
+ 
+
+注：这些都是看源码以及在python终端查看engine/session/engine.pool等的各种函数调用和属性获取到的，重要的查看地方: __dict__, __class__；在终端创建连接时注意用变量持有连接，不然你将会看到数据库连接池的状态不变
+
+　　engine.pool.checkedin() 显示闲着的连接数个数，大小从0 ~ Pool size
+
+　　engine.pool.checkedout() 显示被占用的连接数个数，大小从0 ~ Pool size+max_overflow
+
+ 
+
+调用session.connection()或者engine.connect()，从数据库池中拿连接，如果有闲着的连接就直接返回，没有闲着的就看下是否能创建连接（即数据库池满了），如果能就创建新连接，如果不能，则等待连接，超时时间可配置，请查看文档
+
+调用Connection.close()释放连接，将数据库连接放回连接池，而不是真的关闭连接
