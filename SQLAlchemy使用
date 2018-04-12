@@ -92,3 +92,4 @@ mysql_engine = create_engine(
     pool_recycle=25,
 )
 由于sae是30超时，所以这里设置了个pool_recycle=25s自动重连
+对于使用sqlalchemy的用户，需要在请求处理结束时调用 db.session.close() ，关闭当前session，将mysql连接还给连接池，并且将连接池的连接recyle时间设的小一点（推荐为60s）。
