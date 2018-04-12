@@ -78,3 +78,17 @@ mysql_engine = create_engine('mysql+mysqlconnector://root:root@localhost/arkphar
 self.session = scoped_session(sessionmaker(bind=mysql_engine,autocommit=False, autoflush=False,expire_on_commit=False))
 
 https://segmentfault.com/a/1190000003856556
+
+
+MySQL has gone away sae 30秒超时sqlalchemy解决办法
+MySQL连接超时时间为30s，所以你需要在代码中检查是否超时，是否需要重连。
+
+修改一下数据库连接时的参数，解决之：
+mysql_engine = create_engine(
+    'mysql://%s:%s@%s:%s/app_gorthon?charset=utf8' %
+    (MYSQL_USER, MYSQL_PASS, MYSQL_HOST_M, MYSQL_PORT),
+    encoding='utf8',
+    echo=False,
+    pool_recycle=25,
+)
+由于sae是30超时，所以这里设置了个pool_recycle=25s自动重连
