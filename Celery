@@ -297,3 +297,5 @@ Configuration ->
 在上面，我们用两个命令启动了 Worker 进程和 Beat 进程，我们也可以将它们放在一个命令中：
 
 $ celery -B -A celery_app worker --loglevel=info
+
+http://docs.jinkan.org/docs/celery/getting-started/introduction.html
